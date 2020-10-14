@@ -1,0 +1,69 @@
+Download the movielens dataset for "education and development" from this URL:
+https://grouplens.org/datasets/movielens/
+
+Upload it to Databricks using either wget command or manually uploading.
+
+Read the files into different RDDs.
+
+Answer the following questions:
+
+
+
+val movies = spark.read.option("header","true").option("inferSchema","true").csv("YOUR_PATH.csv")
+val ratings = spark.read.option("header","true").option("inferSchema","true").csv("YOUR_PATH.csv")
+val tags = spark.read.option("header","true").option("inferSchema","true").csv("YOUR_PATH.csv")
+
+
+// Which movie has the highest count of ratings
+1. 
+import org.apache.spark.sql.functions._
+ratings.groupBy("movieId").count().orderBy(desc("count"))
+
+
+// Find the movie with the lowest count of ratings 
+2. 
+ratings.groupBy("movieId").count().orderBy("count")
+
+// Find the avg ratings for each movie
+3.
+val avgRatings = ratings.groupBy("movieId").avg("rating")
+
+// Find the movies with the highest avg rating
+4.
+ratings.groupBy("movieId").avg("rating").toDF("movieId","avgRating").orderBy(desc("avgRating"))
+
+// Find the movies with the lowest ratings
+5.
+ratings.groupBy("movieId").avg("rating").toDF("movieId","avgRating").orderBy("avgRating")
+
+
+// Now join the movies and ratings tables, and give the names of the top 10 movies with the highest ratings
+6. 
+val avgRatings = ratings.groupBy("movieId").avg("rating").toDF("movieId","avgRating").orderBy("avgRating")
+avgRatings.join(movies, avgRatings.col("movieId") === movies.col("movieId")).orderBy(desc("avgRating")).show(10)
+
+// Now join the movies and tags tables, and output the NAMES all movies with the tag 'mathematics'
+7. 
+val mathMovies = tagsPairData.filter{case(x, y) => y.contains("mathematics")}
+mathMovies.join(movies, mathMovies.col("movieId") === movies.col("movieId"))
+
+// What is the average ratings of movies that contain the tag 'artificial intelligence'
+8. 
+val aiMovies = tags.filter($"tag".contains("artificial intelligence"))
+// this is done to get movieId only once
+val joined = aiMovies.join(ratings, Seq("movieId"))
+joined.groupBy("movieId").avg("rating").show()
+
+
+// What is the average rating of movies that have the genre 'Crime'
+9. 
+val cMovies = movies.filter($"genres".contains("Crime"))
+cMovies.join(ratings, Seq("movieId")).agg(avg("rating")).show()
+
+
+10. Which is the most popular tag?
+tags.groupBy("tag").count.orderBy(desc("count")).show(10)
+
+
+
+

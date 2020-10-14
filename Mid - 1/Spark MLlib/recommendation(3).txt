@@ -1,0 +1,62 @@
+Download file from: http://www.utdallas.edu/~axn112530/cs6350/spark/ratings-small.dat
+
+0. Import Libraries:
+import org.apache.spark.ml.evaluation.RegressionEvaluator
+import org.apache.spark.ml.recommendation.ALS
+
+1. Load file into dataframe
+val ratings = spark.read.option("inferSchema","true").option("header","false").csv("PATH").toDF("userID", "profileID", "rating")
+
+2. Split into train and test parts:
+val Array(training, test) = ratings.randomSplit(Array(0.8, 0.2))
+
+3. Create ALS model:
+val als = new ALS().setMaxIter(5).setRegParam(0.01).setRank(5).setUserCol("userID").setItemCol("profileID").setRatingCol("rating")
+val model = als.fit(training)
+
+4. Apply model on test data:
+
+model.setColdStartStrategy("drop")
+val predictions = model.transform(test)
+
+5. Find the performance:
+val evaluator = new RegressionEvaluator().setMetricName("rmse").setLabelCol("rating").setPredictionCol("prediction")
+val rmse = evaluator.evaluate(predictions)
+println(s"Root-mean-square error = $rmse")
+
+
+/***************************
+*	Book Recommendation
+*
+***************************/
+
+// Book Recommendation Dataset: http://www2.informatik.uni-freiburg.de/~cziegler/BX/
+// Direct download link: http://www2.informatik.uni-freiburg.de/~cziegler/BX/BX-CSV-Dump.zip
+
+import org.apache.spark.ml.feature.StringIndexer
+
+val ratings = spark.read.option("header","true").option("inferSchema","true").option("delimiter",";").csv("YourPath")
+val indexer = new StringIndexer().setInputCol("ISBN").setOutputCol("ISBNIndex")
+val indexed = indexer.fit(ratings).transform(ratings)
+val Array(training, test) = ratings.randomSplit(Array(0.8, 0.2))
+// define the model
+//
+val als = new ALS().setMaxIter(5).setRegParam(0.01).setRank(10).setUserCol("User-ID").setItemCol("ISBNIndex").setRatingCol("Book-Rating")
+// fit model on training part
+val model = als.fit(training)
+model.setColdStartStrategy("drop")
+val predictions = model.transform(test)
+val evaluator = new RegressionEvaluator().setMetricName("rmse").setLabelCol("Book-Rating").setPredictionCol("prediction")
+val rmse = evaluator.evaluate(predictions)
+println(s"Root-mean-square error = $rmse")
+
+// Generate top 10 movie recommendations for each user
+val userRecs = model.recommendForAllUsers(10)
+// Generate top 10 user recommendations for each movie
+val movieRecs = model.recommendForAllItems(10)
+
+
+
+
+
+

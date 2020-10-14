@@ -1,0 +1,206 @@
+# get data file from http://www.utdallas.edu/~axn112530/cs6350/dflab/car-milage.csv
+val df = spark.read.option("header","true").option("inferSchema","true").csv(PATH)
+import org.apache.spark.ml.feature.FeatureHasher
+val hasher = new FeatureHasher().setInputCols(Array("mpg","displacement","hp","torque","CRatio","RARatio","CarbBarrells","NoOfSpeed","length","width","weight")).setOutputCol("features")
+val transformed = hasher.transform(df)
+import org.apache.spark.ml.classification.LogisticRegression
+val lr = new LogisticRegression().setMaxIter(100).setRegParam(0.1).setElasticNetParam(0.6).setFeaturesCol("features").setLabelCol("automatic")
+val Array(train, test) = transformed.randomSplit(Array(0.9, 0.1))
+val lrModel = lr.fit(train)
+val result = lrModel.transform(test)
+result.select("automatic","prediction").show()
+
+# let's evaluate accuracy
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator 
+val evaluator = new MulticlassClassificationEvaluator() 
+evaluator.setLabelCol("automatic")
+evaluator.setMetricName("accuracy")
+val accuracy = evaluator.evaluate(result)
+
+# Support Vector Classifier
+import org.apache.spark.ml.classification.LinearSVC
+val lsvc = new LinearSVC().setMaxIter(100).setRegParam(0.1).setFeaturesCol("features").setLabelCol("automatic")
+val lsvcModel = lsvc.fit(train)
+val result = lsvcModel.transform(test)
+result.select("automatic","prediction").show()
+
+
+# Decision Tree Classifier
+import org.apache.spark.ml.classification.DecisionTreeClassifier
+val dt = new DecisionTreeClassifier().setLabelCol("automatic").setFeaturesCol("features")
+val dtModel = dt.fit(train)
+val result = dtModel.transform(test)
+result.select("automatic","prediction").show()
+dtModel.toDebugString
+
+####################################################################
+
+
+#Download dataset from https://archive.ics.uci.edu/ml/datasets/Sentiment+Labelled+Sentences and extract it locally. Unzip it and look at the “yelp_labelled.txt” or #any other file that you would like to process.
+
+# Manually upload to Databricks and get its path
+val yelpDF = spark.read.option("header","false").option("delimiter","\t"). option("inferSchema","true").csv(PATH).toDF("text", "label")
+
+# Let’s convert the text column to words
+import org.apache.spark.ml.feature.{HashingTF, IDF, Tokenizer}
+val tokenizer = new Tokenizer().setInputCol("text").setOutputCol("words") 
+val wordsData = tokenizer.transform(yelpDF)
+
+# raw data to feature vectors
+val hashingTF = new org.apache.spark.ml.feature.HashingTF() .setInputCol("words").setOutputCol("rawFeatures").setNumFeatures(100) 
+val featurizedData = hashingTF.transform(wordsData)
+val idf = new IDF().setInputCol("rawFeatures").setOutputCol("features") 
+val idfModel = idf.fit(featurizedData)
+val rescaledData = idfModel.transform(featurizedData) 
+rescaledData.select("label", "features").show()
+
+# create a logistic regression model
+val Array(train, test) = rescaledData.randomSplit(Array(0.9, 0.1))
+import org.apache.spark.ml.classification.LogisticRegression 
+val lr = new LogisticRegression().setMaxIter(1000) .setRegParam(0.09) .setElasticNetParam(0.9)
+val lrModel = lr.fit(train)
+val result = lrModel.transform(test) 
+result.show()
+
+
+# let's evaluate the classification
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator 
+val evaluator = new MulticlassClassificationEvaluator() 
+evaluator.setLabelCol("label")
+evaluator.setMetricName("accuracy")
+val accuracy = evaluator.evaluate(result)
+
+
+
+%-----------car dataset regression---------------%
+// Download the car mileage dataset from http://www.utdallas.edu/~axn112530/cs6350/dflab/car-milage.csv
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.corr
+import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.linalg.Vectors
+import org.apache.spark.ml.evaluation.RegressionEvaluator
+
+	import sys.process._
+	// download any large book
+	"wget -P /tmp http://www.utdallas.edu/~axn112530/cs6350/dflab/car-milage.csv" !
+	
+	val filePath = "file:/tmp/car-milage.csv"
+	val cars = spark.read.option("header","true"). option("inferSchema","true").csv(filePath)
+
+	val cars1 = cars.na.drop() 
+	val assembler = new VectorAssembler()
+    assembler.setInputCols(Array("displacement","hp","torque","CRatio","RARatio","CarbBarrells","NoOfSpeed","length","width","weight","automatic"))
+    assembler.setOutputCol("features")
+    val cars2 = assembler.transform(cars1)
+    cars2.show(40)
+    //
+    // Split into training & test
+    //
+    //val train = cars2.filter(cars1("weight") <= 4000)
+    //val test = cars2.filter(cars1("weight") > 4000)
+	val Array(train, test) = cars2.randomSplit(Array(0.9, 0.1))
+
+    test.show()
+    println("Train = "+train.count()+" Test = "+test.count())
+		val algLR = new LinearRegression()
+		algLR.setMaxIter(100)
+		algLR.setRegParam(0.3)
+		algLR.setElasticNetParam(0.8)
+		algLR.setLabelCol("mpg")
+		//
+		val mdlLR = algLR.fit(train)
+		//
+		println(s"Coefficients: ${mdlLR.coefficients} Intercept: ${mdlLR.intercept}")
+		val trSummary = mdlLR.summary
+    println(s"numIterations: ${trSummary.totalIterations}")
+    println(s"Iteration Summary History: ${trSummary.objectiveHistory.toList}")
+    trSummary.residuals.show()
+    println(s"RMSE: ${trSummary.rootMeanSquaredError}")
+    println(s"r2: ${trSummary.r2}")
+    //
+		// Now let us use the model to predict our test set
+		//
+    val predictions = mdlLR.transform(test)
+    predictions.show()
+    // Calculate RMSE & MSE
+    val evaluator = new RegressionEvaluator()
+		evaluator.setLabelCol("mpg")
+		val rmse = evaluator.evaluate(predictions)
+		println("Root Mean Squared Error = "+"%6.3f".format(rmse))
+		//
+		evaluator.setMetricName("mse")
+		val mse = evaluator.evaluate(predictions)
+		println("Mean Squared Error = "+"%6.3f".format(mse))
+    //
+    println("** That's All Folks **")		
+
+%------------ Decision Tree Example -------------
+
+ import org.apache.spark.sql.types.DataType
+ import org.apache.spark.sql.SparkSession
+ import org.apache.spark.sql.functions.corr
+ import org.apache.spark.ml.regression.LinearRegression
+ import org.apache.spark.ml.linalg.Vectors
+ import org.apache.spark.ml.evaluation.RegressionEvaluator
+ import org.apache.spark.ml.feature.{VectorAssembler,StringIndexer}
+ import org.apache.spark.ml.classification.DecisionTreeClassifier
+ import org.apache.spark.sql.types.DoubleType
+ import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+
+import sys.process._ 
+ "wget -P /tmp http://www.utdallas.edu/~axn112530/cs6350/dflab/titanic3_02.csv" !!
+
+	val filePath = "file:/tmp/titanic3_02.csv"
+	val passengers = spark.read.option("header","true"). option("inferSchema","true"). csv(filePath) 
+ 	val passengers1 = passengers.select(passengers("Pclass"),passengers("Survived").cast(DoubleType).as("Survived"),passengers("Gender"),passengers("Age"),passengers("SibSp"),passengers("Parch"),passengers("Fare"))
+    passengers1.show(5)
+        //
+        // VectorAssembler does not support the StringType type. So convert Gender to numeric
+        //
+    val indexer = new StringIndexer()
+    indexer.setInputCol("Gender")
+    indexer.setOutputCol("GenderCat")
+    val passengers2 = indexer.fit(passengers1).transform(passengers1)
+    passengers2.show(5)
+        //
+    val passengers3 = passengers2.na.drop()
+    println("Orig = "+passengers2.count()+" Final = "+ passengers3.count() + "Dropped = "+ (passengers2.count() - passengers3.count()))
+        //
+    val assembler = new VectorAssembler()
+    assembler.setInputCols(Array("Pclass","GenderCat","Age","SibSp","Parch","Fare"))
+    assembler.setOutputCol("features")
+    val passengers4 = assembler.transform(passengers3)
+    passengers4.show(5)
+	
+	val Array(train, test) = passengers4.randomSplit(Array(0.9, 0.1))
+	println("Train = "+train.count()+" Test = "+test.count())
+	
+	val algTree = new DecisionTreeClassifier()
+	algTree.setLabelCol("Survived")
+	algTree.setImpurity("gini") // could be "entropy"
+	algTree.setMaxBins(32)
+	algTree.setMaxDepth(5)
+	       //
+	val mdlTree = algTree.fit(train)
+	println("The tree has %d nodes.".format(mdlTree.numNodes))
+	println(mdlTree.toDebugString)
+	println(mdlTree.toString)
+	println(mdlTree.featureImportances)
+	
+	val predictions = mdlTree.transform(test)
+	predictions.show(5)
+	
+	// model evaluation
+	val evaluator = new MulticlassClassificationEvaluator()
+	evaluator.setLabelCol("Survived")
+	evaluator.setMetricName("accuracy") // could be f1, "weightedPrecision" or "weightedRecall"
+	       //
+	val startTime = System.nanoTime()
+	val accuracy = evaluator.evaluate(predictions)
+	println("Test Accuracy = %.2f%%".format(accuracy*100))
+	       //
+	val elapsedTime = (System.nanoTime() - startTime) / 1e9
+	println("Elapsed time: %.2fseconds".format(elapsedTime))
+	
+	

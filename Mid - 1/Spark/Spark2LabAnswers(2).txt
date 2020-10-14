@@ -1,0 +1,66 @@
+import sys.process._
+"wget -P /tmp http://files.grouplens.org/datasets/movielens/ml-latest-small.zip" !
+"unzip /tmp/ml-latest-small.zip -d /tmp" !
+"ls /tmp/ml-latest-small" !
+val ratings = sc.textFile("file:/tmp/ml-latest-small/ratings.csv")
+val ratingsHeader = ratings.first
+val ratingsData = ratings.filter(line => line != header)
+val ratingsPairData = data.map(x => ((x.split(","))(1), (x.split(","))(2)))
+// load movies
+val movies = sc.textFile("file:/tmp/ml-latest-small/movies.csv")
+val moviesHeader = movies.first
+val moviesData = movies.filter(line => line != moviesHeader)
+val moviesPairData = moviesData.map(x => ((x.split(","))(0), (x.split(","))(1)))
+// load tags
+val tags = sc.textFile("file:/tmp/ml-latest-small/tags.csv")
+val tagsHeader = tags.first
+val tagsData = tags.filter(line => line != tagsHeader)
+val tagsPairData = tagsData.map(x => ((x.split(","))(1), (x.split(","))(2)))
+
+
+// Which movie has the highest count of ratings
+1. ratingsPairData.countByKey().toSeq.sortBy(-_._2)
+moviesPairData.filter{case (key, value) => key == "356"}.collect()
+
+// Find the movie with the lowest count of ratings 
+2. ratingsPairData.countByKey().toSeq.sortBy(_._2)
+
+// Find the avg ratings for each movie
+3.
+val avgRatingSumCount = ratingsPairData.mapValues(x => (x.toDouble, 1.0)).reduceByKey((x, y) => ((x._1 + y._1).toDouble, (x._2 + y._2).toDouble))
+val avgRating = avgRatingSumCount.mapValues{case(sum: Double, count: Double) => sum/count}
+
+// Find the movies with the highest avg rating
+4.val sortedRatings = avgRating.sortBy{case(x,y) => -y}
+
+
+// Find the movies with the lowest ratings
+5.val sortedRatings = avgRating.sortBy{case(x,y) => y}
+
+
+// Now join the movies and ratings tables, and give the names of the top 10 movies with the highest ratings
+6. val joined = sortedRatings.join(moviesPairData)
+ joined.sortBy{case (mid: String, (rating: Double, name: String)) => -rating }.take(10)
+
+// Now join the movies and tags tables, and output the NAMES all movies with the tag 'mathematics'
+7. val mathMovies = tagsPairData.filter{case(x, y) => y.contains("mathematics")}
+val joined = mathMovies.join(moviesPairData)
+
+// What is the average ratings of movies that contain the tag 'artificial intelligence'
+8. val aiMovies = tagsPairData.filter{case(x, y) => y.contains("artificial intelligence")}
+val joined = aiMovies.join(pairData)
+val tempRating = joined.map(x => x._2._2)
+tempRating.mean()
+
+// What is the average rating of movies that have the genre 'Crime'
+9. 
+val cMovies = moviesData.filter(line => line.contains("Crime")).map(x => ((x.split(","))(0), (x.split(","))(1)))
+val joined = cMovies.join(pairData).mapValues(x => x._2.toDouble)
+val meanRating = joined.values.mean()
+
+10. Which is the most popular tag?
+val tagCounts = tagsPairData.values.map(x => (x, 1)).reduceByKey((x, y) => x+y).sortBy(-_._2).collect()
+
+
+
+

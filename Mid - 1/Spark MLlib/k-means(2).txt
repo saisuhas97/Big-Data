@@ -1,0 +1,14 @@
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.clustering.KMeans
+
+// Download file from http://www.utdallas.edu/~axn112530/cs6350/data/crime_data.csv
+
+val data = spark.read.option("header", "true").option("inferSchema", "true").csv(PATH)
+val df = data.select("Murder", "Assault", "Robbery", "Drugs")
+val assembler = new VectorAssembler().setInputCols(Array("Murder","Assault", "Robbery", "Drugs")).setOutputCol("features")
+val fitted = assembler.transform(df)
+val kmeans = new KMeans().setK(2).setFeaturesCol("features").setPredictionCol("prediction")
+val model = kmeans.fit(fitted)
+val predictions = model.transform(fitted)
+
+

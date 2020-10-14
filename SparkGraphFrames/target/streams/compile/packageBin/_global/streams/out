@@ -1,0 +1,35 @@
+[debug] Packaging C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\sparkgraphframes_2.11-0.1.jar ...
+[debug] Input file mappings:
+[debug] 	SparkGraph$$anonfun$1.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$1.class
+[debug] 	SparkGraph$$anonfun$2.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$2.class
+[debug] 	SparkGraph$$anonfun$3.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$3.class
+[debug] 	SparkGraph$$anonfun$4.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$4.class
+[debug] 	SparkGraph$$anonfun$5.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$5.class
+[debug] 	SparkGraph$$anonfun$6.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$6.class
+[debug] 	SparkGraph$$anonfun$main$1.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$1.class
+[debug] 	SparkGraph$$anonfun$main$2.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$2.class
+[debug] 	SparkGraph$$anonfun$main$3.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$3.class
+[debug] 	SparkGraph$$anonfun$main$4.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$4.class
+[debug] 	SparkGraph$$anonfun$main$5.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$5.class
+[debug] 	SparkGraph$$anonfun$main$6.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$6.class
+[debug] 	SparkGraph$$anonfun$main$7.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$7.class
+[debug] 	SparkGraph$$anonfun$main$8.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$$anonfun$main$8.class
+[debug] 	SparkGraph$.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph$.class
+[debug] 	SparkGraph.class
+[debug] 	  C:\Users\annam\Desktop\Spring'20\BD\SparkGraphFrames\target\scala-2.11\classes\SparkGraph.class
+[debug] Done packaging.

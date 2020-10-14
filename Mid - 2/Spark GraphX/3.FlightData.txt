@@ -1,0 +1,86 @@
+// Databricks notebook source
+
+val flights = spark.read.option("header","true").csv("/FileStore/tables/874494594_T_ONTIME_REPORTING.csv")
+
+// COMMAND ----------
+
+flights.show()
+
+// COMMAND ----------
+
+val airports = flights.select("ORIGIN","ORIGIN_AIRPORT_ID").toDF("id","name").distinct()
+
+// COMMAND ----------
+
+val airportEdges = flights.select("ORIGIN", "DEST").toDF("src","dst")
+
+// COMMAND ----------
+
+airportEdges.show()
+
+// COMMAND ----------
+
+import org.graphframes.GraphFrame
+
+val airportGraph = GraphFrame(airports, airportEdges)
+
+airportGraph.cache()
+
+// COMMAND ----------
+
+println(s"Total Number of Stations: ${airportGraph.vertices.count()}")
+
+println(s"Total Number of Trips in Graph: ${airportGraph.edges.count()}")
+
+println(s"Total Number of Trips in Original Data: ${airportEdges.count()}")
+
+
+// Flights between DFW and LAS
+
+airportGraph.edges
+  .where("src = 'DFW' AND dst = 'LAS'")
+  .groupBy("src", "dst").count()
+  .orderBy(desc("count"))
+  .show(10)
+
+// using Motifs
+
+val motifs = airportGraph.find("(a)-[ab]->(b); (b)-[bc]->(c); (c)-[ca]->(a)")
+
+// find indegrees and outdegrees
+
+val inDeg = stationGraph.inDegrees
+inDeg.orderBy(desc("inDegree")).show(5, false)
+
+
+// COMMAND ----------
+
+val outDeg = stationGraph.outDegrees
+outDeg.orderBy(desc("outDegree")).show(5, false)
+
+// COMMAND ----------
+
+import org.apache.spark.sql.functions.desc
+
+val ranks = airportGraph.pageRank.resetProbability(0.15).maxIter(10).run()
+
+ranks.vertices.orderBy(desc("pagerank")).select("id", "pagerank").show(10)
+
+// find connected components
+val minGraph = GraphFrame(stationVertices, tripEdges.sample(false, 0.1))
+val cc = minGraph.connectedComponents.run()
+
+
+// COMMAND ----------
+
+cc.where("component != 0").show()
+
+// strongly connected components
+// in Scala
+val scc = minGraph.stronglyConnectedComponents.maxIter(3).run()
+
+
+// COMMAND ----------
+
+scc.groupBy("component").count().show()
+

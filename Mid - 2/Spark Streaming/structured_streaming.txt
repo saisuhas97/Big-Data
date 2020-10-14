@@ -1,0 +1,10 @@
+1. Activity Action Count
+
+https://docs.databricks.com/spark/latest/structured-streaming/demo-notebooks.html#structured-streaming-scala
+
+2. Spark MLlib with Structured Streaming:
+https://docs.databricks.com/_static/notebooks/using-mllib-with-structured-streaming.html
+
+3. Structured Streaming Kafka
+https://docs.databricks.com/_static/notebooks/structured-streaming-kafka.html
+
